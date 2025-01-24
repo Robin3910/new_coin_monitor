@@ -1,3 +1,6 @@
+# 对接cryptocurrency alerting的通知
+# 转发到微信上
+
 from flask import Flask, request
 import json
 import requests
