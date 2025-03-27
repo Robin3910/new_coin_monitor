@@ -40,6 +40,9 @@ client = Client(
     BINANCE_CONFIG['secret'], 
     base_url=BINANCE_CONFIG['base_url']
 )
+
+logger.info(client.account())
+
 symbol_tick_size = {}
 
 # 定义交易状态枚举
