@@ -105,6 +105,18 @@ def get_trading_info(symbol):
         trading_pairs = json.load(f)
     return trading_pairs.get(symbol, {})
 
+def get_account_balance():
+    """获取账户USDT余额"""
+    try:
+        account_info = client.account()
+        for asset in account_info['assets']:
+            if asset['asset'] == 'USDT':
+                return float(asset['walletBalance'])
+        return 0
+    except Exception as e:
+        logger.error(f"获取账户余额失败: {str(e)}")
+        return 0
+
 def monitor_new_coin(symbol):
     """监控新币上线及交易条件"""
     logger.info(f"开始监控新币: {symbol}")
@@ -156,12 +168,18 @@ def monitor_new_coin(symbol):
                 
                 if is_bearish:
                     try:
-                        entry_price = round(mark_price * (1 + STRATEGY_CONFIG['entry_price_add_percent'] / 100), symbol_tick_size[symbol]['tick_size'])
+                        # 获取账户余额并计算入场金额
+                        account_balance = get_account_balance()
+                        entry_usdt = account_balance * 0.5  # 使用账户余额的一半
+                        
+                        entry_price = round(mark_price * (1 + STRATEGY_CONFIG['entry_price_add_percent'] / 100), 
+                                         symbol_tick_size[symbol]['tick_size'])
                         
                         # 计算下单数量
-                        quantity = round(STRATEGY_CONFIG['entry_usdt']/entry_price, symbol_tick_size[symbol]['min_qty'])
+                        quantity = round(entry_usdt/entry_price, symbol_tick_size[symbol]['min_qty'])
                         
-                        logger.info(f"{symbol}做空入场: {entry_price}|quantity:{quantity}")
+                        logger.info(f"{symbol}做空入场: 账户余额:{account_balance}|入场金额:{entry_usdt}|"
+                                  f"入场价格:{entry_price}|quantity:{quantity}")
 
                         # 开空单
                         order = client.new_order(
