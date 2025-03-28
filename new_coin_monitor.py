@@ -204,6 +204,8 @@ def monitor_new_coin(symbol):
                     sl_price = round(entry_price * (1 + STRATEGY_CONFIG['sl_percent'] / 100), 
                                    symbol_tick_size[symbol]['tick_size'])
                     
+                    logger.info(f"设置止盈: {tp_price}|止损： {sl_price}|入场价格：{entry_price}|数量：{quantity}")
+                    
                     # 设置止盈单
                     tp_order = client.new_order(
                         symbol=symbol,
