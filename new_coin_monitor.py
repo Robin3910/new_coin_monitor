@@ -54,7 +54,21 @@ class TradingStatus(Enum):
     POSITION_CLOSED = "已出场"
 
 def get_decimal_places(tick_size):
-    return len(tick_size.split('.')[1]) if '.' in tick_size else 0
+    """
+    计算价格精度，只取到第一个非零数字的位置
+    例如：
+    0.0001000 -> 4
+    0.001 -> 3
+    1.0 -> 0
+    """
+    if '.' not in tick_size:
+        return 0
+    
+    decimal_part = tick_size.split('.')[1]
+    for i, digit in enumerate(decimal_part):
+        if digit != '0':
+            return i + 1
+    return 0
 
 def update_trading_status(symbol, status, order_id=None, tp_order_id=None, sl_order_id=None):
     """更新交易对状态"""
@@ -106,6 +120,7 @@ def monitor_new_coin(symbol):
             symbols = [info['symbol'] for info in exchange_info['symbols']]
             if symbol in symbols:
                 logger.info(f"{symbol} 合约已上线")
+                logger.info(f"精度|tick_size: {exchange_info['symbols'][symbols.index(symbol)]['filters'][0]['tickSize']}|min_qty: {exchange_info['symbols'][symbols.index(symbol)]['filters'][1]['minQty']}")
                 symbol_tick_size[symbol] = {
                     'tick_size': get_decimal_places(exchange_info['symbols'][symbols.index(symbol)]['filters'][0]['tickSize']),
                     'min_qty': get_decimal_places(exchange_info['symbols'][symbols.index(symbol)]['filters'][1]['minQty']),
@@ -140,13 +155,14 @@ def monitor_new_coin(symbol):
                 is_bearish = prev_close < prev_open and prev_prev_close < prev_prev_open and funding_rate > STRATEGY_CONFIG['funding_rate_limit']/100 and trading_info.get('status') == TradingStatus.NOT_QUALIFIED.value
                 
                 if is_bearish:
-                    # 获取当前资金费率
                     try:
                         entry_price = round(mark_price * (1 + STRATEGY_CONFIG['entry_price_add_percent'] / 100), symbol_tick_size[symbol]['tick_size'])
                         
                         # 计算下单数量
                         quantity = round(STRATEGY_CONFIG['entry_usdt']/entry_price, symbol_tick_size[symbol]['min_qty'])
                         
+                        logger.info(f"{symbol}做空入场: {entry_price}|quantity:{quantity}")
+
                         # 开空单
                         order = client.new_order(
                             symbol=symbol,
