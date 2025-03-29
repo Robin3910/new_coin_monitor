@@ -288,8 +288,7 @@ def monitor_new_coin(symbol):
                 if tp_order_id:
                     tp_order = client.query_order(symbol=symbol, orderId=tp_order_id)
                     if tp_order['status'] == 'FILLED':
-                        del trading_info[symbol]
-                        # update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
+                        update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
                         msg = f"{symbol} 止盈成交，交易结束"
                         send_notification(msg)
                         logger.info(msg)
@@ -298,8 +297,7 @@ def monitor_new_coin(symbol):
                 if sl_order_id:
                     sl_order = client.query_order(symbol=symbol, orderId=sl_order_id)
                     if sl_order['status'] == 'FILLED':
-                        del trading_info[symbol]
-                        # update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
+                        update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
                         msg = f"{symbol} 止损成交，交易结束"
                         send_notification(msg)
                         logger.info(msg)
