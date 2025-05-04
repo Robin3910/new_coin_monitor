@@ -170,7 +170,8 @@ def monitor_new_coin(symbol):
                     try:
                         # 获取账户余额并计算入场金额
                         account_balance = get_account_balance()
-                        entry_usdt = account_balance * 0.5  # 使用账户余额的一半
+                        entry_usdt_percent = STRATEGY_CONFIG["entry_usdt_percent"]
+                        entry_usdt = account_balance * entry_usdt_percent
                         
                         entry_price = round(mark_price * (1 + STRATEGY_CONFIG['entry_price_add_percent'] / 100), 
                                          symbol_tick_size[symbol]['tick_size'])

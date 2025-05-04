@@ -14,10 +14,10 @@ WX_CONFIG = {
 
 STRATEGY_CONFIG = {
     'funding_rate_limit': -0.3, # 单位%，例如资金费率要大于-0.3%，才能开仓
-    'entry_limit_percent': 0, # 单位%，例如4小时K棒要下跌超过5%，才能开仓
+    'entry_limit_percent': 4, # 单位%，例如4小时K棒要下跌超过5%，才能开仓
     'entry_price_add_percent': 0, # 单位%，例如开仓价格要在当前价格的3%以上
-    'entry_usdt': 100, # 单位USDT，例如开仓数量为100USDT
-    'sl_percent': 20, # 单位%，例如止损价格要在当前价格的20%以下
+    "entry_usdt_percent": 0.1, # 每次入仓占总资金的比例
+    'sl_percent': 99, # 单位%，例如止损价格要在当前价格的20%以下
     'tp_percent': 10, # 单位%，例如止盈价格要在当前价格的10%以上
 }
 
