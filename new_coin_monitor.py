@@ -360,7 +360,7 @@ def receive_message():
             if exchange.upper() == 'okx':
                 symbol = f"{currency}-USDT-SWAP"
                 for account in okx_helper.accounts:
-                    _thread.start_new_thread(okx_helper.trailing_stop_monitor, (account["instance"],))
+                    _thread.start_new_thread(okx_helper.monitor_new_coin, (account["instance"],))
 
                 
             return '', 200

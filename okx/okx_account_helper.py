@@ -11,7 +11,6 @@ from log_helper import get_logger
 from okx_account import OkxAccount
 # from sqlite_helper import SQliteHelper
 
-
 class OkxAccountHelper:
     def __init__(self, root_path="",logger=None):
         logger.debug("初始化OkxAccountHelper")
