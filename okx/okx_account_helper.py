@@ -560,10 +560,11 @@ class OkxAccountHelper:
                             mark_price_info = publicDataAPI.get_mark_price(instId=instance.symbol)
                             mark_price = float(mark_price_info['data'][0]['markPx'])
                             
+                            funding_rate_limit = float(self.config["STRATEGY_CONFIG"]['funding_rate_limit']) / 100
                             # 判断是否满足做空条件
                             is_bearish = (prev_close < prev_open and 
                                         prev_prev_close < prev_prev_open and 
-                                        funding_rate > 0.01)  # 资金费率大于1%
+                                        funding_rate > funding_rate_limit)  # 资金费率大于1%
                             
                             if is_bearish:
                                 try:
@@ -574,9 +575,9 @@ class OkxAccountHelper:
                                         if detail['ccy'] == 'USDT':
                                             available_balance = float(detail['availBal'])
                                             break
-                                    
+                                    entry_usdt_percent = float(self.config["STRATEGY_CONFIG"]['entry_usdt_percent'])
                                     # 计算入场金额（使用账户余额的一半）
-                                    entry_usdt = available_balance * 0.5
+                                    entry_usdt = available_balance * entry_usdt_percent
                                     
                                     # 计算入场价格（当前标记价格上浮0.1%）
                                     entry_price = round(mark_price * 1.001, 8)

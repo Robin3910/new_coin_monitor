@@ -14,5 +14,13 @@
       "passphrase": "Robin3910!",
       "flag": "1"
     }
-  ]
+  ],
+    "STRATEGY_CONFIG":{
+      "funding_rate_limit": -0.3,
+      "entry_limit_percent": 4,
+      "entry_price_add_percent": 0,
+      "entry_usdt_percent": 0.1,
+      "sl_percent": 99,
+      "tp_percent": 10
+  }
 }
