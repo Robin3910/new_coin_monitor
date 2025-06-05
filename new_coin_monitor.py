@@ -6,13 +6,24 @@ import json
 import requests
 import threading
 import time
+import os
 from binance.um_futures import UMFutures
 from datetime import datetime, timedelta
+import _thread
 import logging
 from logging.handlers import RotatingFileHandler
 from enum import Enum
 from binance.um_futures import UMFutures as Client
 from binance.error import ClientError
+from okx.log_helper import get_logger
+from okx.okx_account_helper import OkxAccountHelper
+
+# 获取当前文件所在的目录
+root_path = os.path.dirname(os.path.abspath(__file__))
+# 日志处理
+logger = get_logger(log_path_dir=root_path)
+# 加载OKX辅助工具类
+okx_helper = OkxAccountHelper(root_path=root_path, logger=logger)
 
 from config import BINANCE_CONFIG, WX_CONFIG, STRATEGY_CONFIG
 
@@ -345,6 +356,11 @@ def receive_message():
                     daemon=True
                 )
                 monitor_thread.start()
+            if exchange.upper() == 'okx':
+                symbol = f"{currency}-USDT-SWAP"
+                for account in okx_helper.accounts:
+                    _thread.start_new_thread(okx_helper.trailing_stop_monitor, (account["instance"],))
+
                 
             return '', 200
             
@@ -355,4 +371,5 @@ def receive_message():
     return '', 200
 
 if __name__ == '__main__':
+
     app.run(host='0.0.0.0', port=8088) 
