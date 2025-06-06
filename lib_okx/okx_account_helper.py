@@ -7,8 +7,8 @@ import traceback
 import requests
 from flask import request
 
-from log_helper import get_logger
-from okx_account import OkxAccount
+from lib_okx.log_helper import get_logger
+from lib_okx.okx_account import OkxAccount
 # from sqlite_helper import SQliteHelper
 
 class OkxAccountHelper:
@@ -29,7 +29,7 @@ class OkxAccountHelper:
     def init_accounts(self):
         self.logger.info("开始加载所有账户信息")
         # 加载json
-        config_path = os.path.join(self.root_path, "account_conifg.json")
+        config_path = os.path.join(self.root_path, "lib_okx", "account_conifg.json")
         with open(config_path, 'r') as f:
             config = json.load(f)
             for account in config['account_list']:
@@ -53,7 +53,7 @@ class OkxAccountHelper:
     # 加载全局配置文件
     def get_config(self):
         try:
-            config_path = os.path.join(self.root_path, "account_conifg.json")
+            config_path = os.path.join(self.root_path, "lib_okx", "account_conifg.json")
             with open(config_path, 'r') as f:
                 config = json.load(f)
                 return config
@@ -508,7 +508,7 @@ class OkxAccountHelper:
         #     f'https://sctapi.ftqq.com/SCT143186TIvKuCgmwWnzzzGQ6mE5qmyFU.send?title=okex_{_params["symbol"]}_{_params["side"]}')
         return ret
 
-    def monitor_new_coin(self, instance: OkxAccount):
+    def monitor_new_coin(self, symbol, instance: OkxAccount):
         """监控新币上线及交易条件"""
         self.logger.info(f"开始监控新币: {instance.api_key}")
         
@@ -516,30 +516,33 @@ class OkxAccountHelper:
         publicDataAPI = instance.get_public_api()
         tradeAPI = instance.get_trade_api()
         accountAPI = instance.get_account_api()
+        marketAPI = instance.get_market_api()
         
         while True:
             try:
                 # 获取所有可交易的合约信息
                 instruments = publicDataAPI.get_instruments(instType="SWAP")
+                tick_size = 0
+                min_size = 0
                 
                 if instruments['code'] == '0':
                     # 检查合约是否存在
                     symbol_exists = False
                     for instrument in instruments['data']:
-                        if instrument['instId'] == instance.symbol:
+                        if instrument['instId'] == symbol:
                             symbol_exists = True
                             # 获取合约的精度信息
-                            tick_size = float(instrument['tickSz'])
-                            min_size = float(instrument['minSz'])
+                            tick_size = instrument['tickSz']
+                            min_size = instrument['minSz']
                             self.logger.info(f"合约精度信息: tick_size={tick_size}, min_size={min_size}")
                             break
                     
                     if symbol_exists:
-                        self.logger.info(f"{instance.symbol} 合约已上线")
+                        self.logger.info(f"{symbol} 合约已上线")
                         
                         # 获取4小时K线数据
-                        klines = publicDataAPI.get_candlesticks(
-                            instId=instance.symbol,
+                        klines = marketAPI.get_candlesticks(
+                            instId=symbol,
                             bar="4H",
                             limit="3"
                         )
@@ -553,11 +556,11 @@ class OkxAccountHelper:
                             prev_prev_close = float(klines['data'][0][4])   # 倒数第三根K线收盘价
                             
                             # 获取资金费率
-                            funding_rate_info = publicDataAPI.get_funding_rate(instId=instance.symbol)
+                            funding_rate_info = publicDataAPI.get_funding_rate(instId=symbol)
                             funding_rate = float(funding_rate_info['data'][0]['fundingRate'])
                             
                             # 获取标记价格
-                            mark_price_info = publicDataAPI.get_mark_price(instId=instance.symbol)
+                            mark_price_info = publicDataAPI.get_mark_price(instId=symbol, instType="SWAP")
                             mark_price = float(mark_price_info['data'][0]['markPx'])
                             
                             funding_rate_limit = float(self.config["STRATEGY_CONFIG"]['funding_rate_limit']) / 100
@@ -565,8 +568,8 @@ class OkxAccountHelper:
                             is_bearish = (prev_close < prev_open and 
                                         prev_prev_close < prev_prev_open and 
                                         funding_rate > funding_rate_limit)  # 资金费率大于1%
-                            
-                            if is_bearish:
+                            if True:
+                            # if is_bearish:
                                 try:
                                     # 获取账户余额
                                     balance_info = accountAPI.get_account_balance()
@@ -580,18 +583,21 @@ class OkxAccountHelper:
                                     entry_usdt = available_balance * entry_usdt_percent
                                     
                                     # 计算入场价格（当前标记价格上浮0.1%）
-                                    entry_price = round(mark_price * 1.001, 8)
+                                    price_precise = instance.get_decimal_places(tick_size=tick_size)
+                                    entry_price = round(mark_price * 1.001, price_precise)
+
+                                    # 使用instance的amount函数计算下单数量
+                                    quantity = instance.amountConvertToSZ(symbol, entry_usdt / entry_price, entry_price, "MARKET")
                                     
                                     # 计算下单数量
-                                    quantity = round(entry_usdt / entry_price, 8)
                                     
-                                    self.logger.info(f"{instance.symbol}做空入场: 账户余额:{available_balance}|"
+                                    self.logger.info(f"{symbol}做空入场: 账户余额:{available_balance}|"
                                                    f"入场金额:{entry_usdt}|入场价格:{entry_price}|"
                                                    f"数量:{quantity}")
                                     
                                     # 开空单
                                     order_params = {
-                                        "instId": instance.symbol,
+                                        "instId": symbol,
                                         "tdMode": "cross",
                                         "side": "sell",
                                         "ordType": "limit",
@@ -606,7 +612,7 @@ class OkxAccountHelper:
                                         self.logger.info(f"开空单成功，订单ID: {order_id}")
                                         
                                         # 发送通知
-                                        msg = f"{instance.symbol} 开空成功:\n" \
+                                        msg = f"{symbol} 开空成功:\n" \
                                               f"价格: {mark_price}\n" \
                                               f"数量: {quantity}\n" \
                                               f"订单ID: {order_id}"
@@ -614,7 +620,7 @@ class OkxAccountHelper:
                                     else:
                                         self.logger.error(f"开空单失败: {order_result}")
                                         self.send_wx_notification("新币监控", 
-                                                               f"{instance.symbol} 开空单失败: {order_result}")
+                                                               f"{symbol} 开空单失败: {order_result}")
                                         
                                 except Exception as e:
                                     error_msg = f"开空单异常: {str(e)}"

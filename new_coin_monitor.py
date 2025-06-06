@@ -15,8 +15,8 @@ from logging.handlers import RotatingFileHandler
 from enum import Enum
 from binance.um_futures import UMFutures as Client
 from binance.error import ClientError
-from okx.log_helper import get_logger
-from okx.okx_account_helper import OkxAccountHelper
+from lib_okx.log_helper import get_logger
+from lib_okx.okx_account_helper import OkxAccountHelper
 
 # 获取当前文件所在的目录
 root_path = os.path.dirname(os.path.abspath(__file__))
@@ -357,10 +357,15 @@ def receive_message():
                     daemon=True
                 )
                 monitor_thread.start()
-            if exchange.upper() == 'okx':
+            if exchange.upper() == 'OKX':
                 symbol = f"{currency}-USDT-SWAP"
                 for account in okx_helper.accounts:
-                    _thread.start_new_thread(okx_helper.monitor_new_coin, (account["instance"],))
+                    monitor_thread = threading.Thread(
+                        target=okx_helper.monitor_new_coin,
+                        args=(symbol, account["instance"]),
+                        daemon=True
+                    )
+                    monitor_thread.start()
 
                 
             return '', 200

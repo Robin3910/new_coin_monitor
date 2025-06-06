@@ -3,6 +3,7 @@ import time
 import okx.Account as Account
 import okx.Trade as Trade
 import okx.PublicData as PublicData
+import okx.MarketData as MarketData
 
 class OkxAccount:
     def __init__(self, api_key, api_secret, api_passphrase, flag, logger=None, okx_helper=None):
@@ -25,6 +26,9 @@ class OkxAccount:
     # 公共api
     def get_public_api(self):
         return PublicData.PublicAPI(flag=self.flag)
+    
+    def get_market_api(self):
+        return MarketData.MarketAPI(flag=self.flag)
 
     # 查看账户余额
     def get_account_info(self):
