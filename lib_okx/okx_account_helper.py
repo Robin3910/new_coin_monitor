@@ -517,6 +517,11 @@ class OkxAccountHelper:
         tradeAPI = instance.get_trade_api()
         accountAPI = instance.get_account_api()
         marketAPI = instance.get_market_api()
+        balance_info = accountAPI.get_account_balance()
+        if balance_info['code'] == '0':
+            self.logger.info(f"账户余额信息: {json.dumps(balance_info['data'], ensure_ascii=False, indent=2)}")
+        else:
+            self.logger.error(f"获取账户余额失败: {balance_info}")
         
         while True:
             try:
