@@ -573,8 +573,7 @@ class OkxAccountHelper:
                             is_bearish = (prev_close < prev_open and 
                                         prev_prev_close < prev_prev_open and 
                                         funding_rate > funding_rate_limit)  # 资金费率大于1%
-                            if True:
-                            # if is_bearish:
+                            if is_bearish:
                                 try:
                                     # 获取账户余额
                                     balance_info = accountAPI.get_account_balance()
@@ -622,6 +621,11 @@ class OkxAccountHelper:
                                               f"数量: {quantity}\n" \
                                               f"订单ID: {order_id}"
                                         self.send_wx_notification("新币监控", msg)
+                                        
+                                        # 开仓成功后退出循环
+                                        self.logger.info(f"{symbol} 开仓成功，退出监控循环")
+                                        return True
+                                        
                                     else:
                                         self.logger.error(f"开空单失败: {order_result}")
                                         self.send_wx_notification("新币监控", 
