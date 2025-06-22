@@ -17,6 +17,7 @@ from binance.um_futures import UMFutures as Client
 from binance.error import ClientError
 from lib_okx.log_helper import get_logger
 from lib_okx.okx_account_helper import OkxAccountHelper
+from lib_gateio.gate_bot import GateBot
 
 # 获取当前文件所在的目录
 root_path = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,8 @@ root_path = os.path.dirname(os.path.abspath(__file__))
 logger = get_logger(log_path_dir=root_path)
 # 加载OKX辅助工具类
 okx_helper = OkxAccountHelper(root_path=root_path, logger=logger)
+
+gate_bot = GateBot()
 
 from config import BINANCE_CONFIG, WX_CONFIG, STRATEGY_CONFIG
 
@@ -367,7 +370,15 @@ def receive_message():
                     )
                     monitor_thread.start()
 
-                
+            if exchange.upper() == 'GATE.IO':
+                symbol = f"{currency}_USDT"
+                monitor_thread = threading.Thread(
+                    target=gate_bot.monitor_new_coin,
+                    args=(symbol,),
+                    daemon=True
+                )
+                monitor_thread.start()
+
             return '', 200
             
         except Exception as e:

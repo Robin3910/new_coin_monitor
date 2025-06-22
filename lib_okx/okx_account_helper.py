@@ -557,8 +557,8 @@ class OkxAccountHelper:
                             prev_open = float(klines['data'][1][1])    # 倒数第二根K线开盘价
                             prev_close = float(klines['data'][1][4])   # 倒数第二根K线收盘价
                             
-                            prev_prev_open = float(klines['data'][0][1])    # 倒数第三根K线开盘价
-                            prev_prev_close = float(klines['data'][0][4])   # 倒数第三根K线收盘价
+                            prev_prev_open = float(klines['data'][2][1])    # 倒数第三根K线开盘价
+                            prev_prev_close = float(klines['data'][2][4])   # 倒数第三根K线收盘价
                             
                             # 获取资金费率
                             funding_rate_info = publicDataAPI.get_funding_rate(instId=symbol)
