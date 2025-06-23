@@ -344,14 +344,12 @@ def receive_message():
             # 提取消息内容
             currency = data.get('currency')
             exchange = data.get('exchange')
+
+            send_notification(f"新币上线: 币种 {currency}, 交易所 {exchange}")
             
             if exchange.upper() == 'BINANCE':
                 # 格式化币对名称（添加USDT后缀）
                 symbol = f"{currency}USDT"
-                
-                # 发送新币上线通知
-                # content = f"新币：{currency} 已在 {exchange} 上线"
-                # send_notification(content)
                 
                 # 启动监控线程
                 monitor_thread = threading.Thread(
