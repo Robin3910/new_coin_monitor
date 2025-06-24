@@ -345,7 +345,6 @@ def receive_message():
             currency = data.get('currency')
             exchange = data.get('exchange')
 
-            send_notification(f"新币上线: 币种 {currency}, 交易所 {exchange}")
             
             if exchange.upper() == 'BINANCE':
                 # 格式化币对名称（添加USDT后缀）
@@ -377,6 +376,9 @@ def receive_message():
                 )
                 monitor_thread.start()
 
+
+            send_notification(f"新币上线{exchange}-{currency}")
+            
             return '', 200
             
         except Exception as e:
