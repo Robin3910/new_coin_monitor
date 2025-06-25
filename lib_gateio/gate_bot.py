@@ -402,8 +402,8 @@ class GateBot:
                         prev_open = float(klines[1].o)    # 倒数第二根K线开盘价
                         prev_close = float(klines[1].c)   # 倒数第二根K线收盘价
                         
-                        prev_prev_open = float(klines[2].o)    # 倒数第三根K线开盘价
-                        prev_prev_close = float(klines[2].c)   # 倒数第三根K线收盘价
+                        prev_prev_open = float(klines[0].o)    # 倒数第三根K线开盘价
+                        prev_prev_close = float(klines[0].c)   # 倒数第三根K线收盘价
                         
                         # 获取资金费率
                         funding_rate_info = self.futures_api.list_futures_funding_rate_history(
