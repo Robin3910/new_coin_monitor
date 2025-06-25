@@ -27,6 +27,7 @@ logger = get_logger(log_path_dir=root_path)
 okx_helper = OkxAccountHelper(root_path=root_path, logger=logger)
 
 gate_bot = GateBot()
+processed_map = {}
 
 from config import BINANCE_CONFIG, WX_CONFIG, STRATEGY_CONFIG
 
@@ -345,6 +346,10 @@ def receive_message():
             currency = data.get('currency')
             exchange = data.get('exchange')
 
+            if currency in processed_map:
+                logger.info(f"已经处理过该币种: {currency}, 跳过")
+                return '', 200
+            processed_map[currency] = True
             
             if exchange.upper() == 'BINANCE':
                 # 格式化币对名称（添加USDT后缀）
