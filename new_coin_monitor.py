@@ -377,7 +377,7 @@ def receive_message():
                 monitor_thread.start()
 
 
-            send_notification(f"新币上线{exchange}-{currency}")
+            # send_notification(f"新币上线{exchange}-{currency}")
             
             return '', 200
             
