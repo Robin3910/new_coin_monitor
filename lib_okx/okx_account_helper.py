@@ -43,6 +43,8 @@ class OkxAccountHelper:
                 self.logger.info(f"初始化账户: {account['api_key']}")
                 pass
 
+            
+
     # 根据api_key获取账户实例
     def get_account_info(self, api_key):
         for account in self.accounts:
@@ -62,7 +64,6 @@ class OkxAccountHelper:
             return None
 
     def send_wx_notification(self, title, message):
-        return ""
         """
         发送微信通知
         Args:
@@ -620,7 +621,7 @@ class OkxAccountHelper:
                                               f"价格: {mark_price}\n" \
                                               f"数量: {quantity}\n" \
                                               f"订单ID: {order_id}"
-                                        self.send_wx_notification("新币监控", msg)
+                                        self.send_wx_notification(f"okx-{symbol}", msg)
                                         
                                         # 开仓成功后退出循环
                                         self.logger.info(f"{symbol} 开仓成功，退出监控循环")

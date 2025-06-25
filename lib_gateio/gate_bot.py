@@ -457,7 +457,7 @@ class GateBot:
                                     self.logger.info(f"开空单成功，订单ID: {order_id}")
                                     
                                     # 发送通知
-                                    msg = f"{symbol} 开空成功:\n" \
+                                    msg = f"gateio-{symbol} 开空成功:\n" \
                                           f"价格: {mark_price}\n" \
                                           f"数量: {quantity}\n" \
                                           f"订单ID: {order_id}"

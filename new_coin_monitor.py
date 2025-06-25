@@ -209,7 +209,7 @@ def monitor_new_coin(symbol):
                         if order['orderId']:
                             update_trading_status(symbol, TradingStatus.ORDER_PLACED, order['orderId'])
                             
-                            msg = f"{symbol} 开空成功:\n" \
+                            msg = f"bn-{symbol} 开空成功:\n" \
                                     f"价格: {mark_price}\n" \
                                     f"数量: {quantity}\n" \
                                     f"订单ID: {order['orderId']}"
