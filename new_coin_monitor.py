@@ -346,10 +346,13 @@ def receive_message():
             currency = data.get('currency')
             exchange = data.get('exchange')
 
-            if currency in processed_map:
-                logger.info(f"已经处理过该币种: {currency}, 跳过")
-                return '', 200
-            processed_map[currency] = True
+            send_notification(f"新币上线-{exchange}-{currency}")
+
+            # 目前mexc不支持API交易，所以有新的品种上线满足条件了，就告警一下手动开仓
+            # if currency in processed_map and exchange.upper() != "MEXC":
+            #     logger.info(f"已经处理过该币种: {currency}, 跳过")
+            #     return '', 200
+            # processed_map[currency] = True
             
             if exchange.upper() == 'BINANCE':
                 # 格式化币对名称（添加USDT后缀）
@@ -362,6 +365,7 @@ def receive_message():
                     daemon=True
                 )
                 monitor_thread.start()
+
             if exchange.upper() == 'OKX':
                 symbol = f"{currency}-USDT-SWAP"
                 for account in okx_helper.accounts:
@@ -381,9 +385,6 @@ def receive_message():
                 )
                 monitor_thread.start()
 
-
-            # send_notification(f"新币上线{exchange}-{currency}")
-            
             return '', 200
             
         except Exception as e:
