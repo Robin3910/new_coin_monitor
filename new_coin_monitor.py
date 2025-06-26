@@ -343,6 +343,9 @@ def receive_message():
             data = request.get_json()
             
             # 提取消息内容
+            if not data or 'currency' not in data or 'exchange' not in data:
+                return '', 200
+            
             currency = data.get('currency')
             exchange = data.get('exchange')
 
