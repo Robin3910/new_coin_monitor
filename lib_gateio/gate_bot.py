@@ -355,7 +355,7 @@ class GateBot:
     
     def monitor_new_coin(self, symbol):
         """监控新币上线及交易条件"""
-        self.logger.info(f"开始监控新币: {symbol}")
+        self.logger.info(f"gateio开始监控新币: {symbol}")
         
         # 获取账户余额信息
         try:
@@ -366,29 +366,27 @@ class GateBot:
                 self.logger.error("获取账户余额失败")
         except Exception as e:
             self.logger.error(f"获取账户余额异常: {str(e)}")
+                            
+        # 检查合约是否存在
+        symbol_exists = False
+        tick_size = 0
         
         while True:
             try:
-                # 获取所有可交易的合约信息
-                contracts = self.futures_api.list_futures_contracts(SETTLE)
-                tick_size = 0
-                min_size = 0
-                
-                # 检查合约是否存在
-                symbol_exists = False
-                contracts = self.futures_api.list_futures_contracts(SETTLE)
-                for contract in contracts:
-                    if contract.name == symbol:
-                        symbol_exists = True
-                        # 获取合约的精度信息
-                        tick_size = len(str(float(contract.order_price_round)).split('.')[-1].rstrip('0'))
-                        min_size = len(str(float(contract.order_size_min)).split('.')[-1].rstrip('0'))
-                        self.logger.info(f"合约精度信息: tick_size={tick_size}, min_size={min_size}")
-                        break
+                if symbol_exists == False:
+                    # 获取所有可交易的合约信息
+                    contracts = self.futures_api.list_futures_contracts(SETTLE)
+
+                    for contract in contracts:
+                        if contract.name == symbol:
+                            symbol_exists = True
+                            # 获取合约的精度信息
+                            tick_size = len(str(float(contract.order_price_round)).split('.')[-1].rstrip('0'))
+                            self.logger.info(f"gateio-{symbol}合约精度信息: tick_size={tick_size}")
+                            self.logger.info(f"gateio-{symbol} 合约已上线")
+                            break
                 
                 if symbol_exists:
-                    self.logger.info(f"{symbol} 合约已上线")
-                    
                     # 获取4小时K线数据
                     klines = self.futures_api.list_futures_candlesticks(
                         SETTLE, 
@@ -437,7 +435,6 @@ class GateBot:
                                 entry_price = round(mark_price * 1.001, tick_size)
 
                                 # 计算下单数量
-                                # quantity = round(entry_usdt / entry_price, min_size)
                                 quantity = self.amountConvertToContract(symbol, entry_usdt / entry_price)
                                 
                                 self.logger.info(f"{symbol}做空入场: 账户余额:{available_balance}|"

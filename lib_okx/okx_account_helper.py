@@ -511,7 +511,7 @@ class OkxAccountHelper:
 
     def monitor_new_coin(self, symbol, instance: OkxAccount):
         """监控新币上线及交易条件"""
-        self.logger.info(f"开始监控新币: {instance.api_key}")
+        self.logger.info(f"okx-开始监控新币: {instance.api_key}")
         
         # 获取公共数据API
         publicDataAPI = instance.get_public_api()
@@ -523,119 +523,117 @@ class OkxAccountHelper:
             self.logger.info(f"账户余额信息: {json.dumps(balance_info['data'], ensure_ascii=False, indent=2)}")
         else:
             self.logger.error(f"获取账户余额失败: {balance_info}")
-        
+
+        symbol_exists = False
+        tick_size = 0
+
         while True:
             try:
                 # 获取所有可交易的合约信息
-                instruments = publicDataAPI.get_instruments(instType="SWAP")
-                tick_size = 0
-                min_size = 0
-                
-                if instruments['code'] == '0':
-                    # 检查合约是否存在
-                    symbol_exists = False
-                    for instrument in instruments['data']:
-                        if instrument['instId'] == symbol:
-                            symbol_exists = True
-                            # 获取合约的精度信息
-                            tick_size = instrument['tickSz']
-                            min_size = instrument['minSz']
-                            self.logger.info(f"合约精度信息: tick_size={tick_size}, min_size={min_size}")
-                            break
+                if symbol_exists == False:
+                    instruments = publicDataAPI.get_instruments(instType="SWAP")
                     
-                    if symbol_exists:
-                        self.logger.info(f"{symbol} 合约已上线")
+                    if instruments['code'] == '0':
+                        # 检查合约是否存在
+                        for instrument in instruments['data']:
+                            if instrument['instId'] == symbol:
+                                symbol_exists = True
+                                # 获取合约的精度信息
+                                tick_size = instrument['tickSz']
+                                break
+                    
+                if symbol_exists:
+                    self.logger.info(f"{symbol}合约上线，精度信息: tick_size={tick_size}")
+                    # 获取4小时K线数据
+                    klines = marketAPI.get_candlesticks(
+                        instId=symbol,
+                        bar="4H",
+                        limit="3"
+                    )
+                    
+                    if klines['code'] == '0' and len(klines['data']) >= 3:
+                        # 计算前两根K线的跌幅
+                        prev_open = float(klines['data'][1][1])    # 倒数第二根K线开盘价
+                        prev_close = float(klines['data'][1][4])   # 倒数第二根K线收盘价
                         
-                        # 获取4小时K线数据
-                        klines = marketAPI.get_candlesticks(
-                            instId=symbol,
-                            bar="4H",
-                            limit="3"
-                        )
+                        prev_prev_open = float(klines['data'][2][1])    # 倒数第三根K线开盘价
+                        prev_prev_close = float(klines['data'][2][4])   # 倒数第三根K线收盘价
                         
-                        if klines['code'] == '0' and len(klines['data']) >= 3:
-                            # 计算前两根K线的跌幅
-                            prev_open = float(klines['data'][1][1])    # 倒数第二根K线开盘价
-                            prev_close = float(klines['data'][1][4])   # 倒数第二根K线收盘价
-                            
-                            prev_prev_open = float(klines['data'][2][1])    # 倒数第三根K线开盘价
-                            prev_prev_close = float(klines['data'][2][4])   # 倒数第三根K线收盘价
-                            
-                            # 获取资金费率
-                            funding_rate_info = publicDataAPI.get_funding_rate(instId=symbol)
-                            funding_rate = float(funding_rate_info['data'][0]['fundingRate'])
-                            
-                            # 获取标记价格
-                            mark_price_info = publicDataAPI.get_mark_price(instId=symbol, instType="SWAP")
-                            mark_price = float(mark_price_info['data'][0]['markPx'])
-                            
-                            funding_rate_limit = float(self.config["STRATEGY_CONFIG"]['funding_rate_limit']) / 100
-                            # 判断是否满足做空条件
-                            is_bearish = (prev_close < prev_open and 
-                                        prev_prev_close < prev_prev_open and 
-                                        funding_rate > funding_rate_limit)  # 资金费率大于1%
-                            if is_bearish:
-                                try:
-                                    # 获取账户余额
-                                    balance_info = accountAPI.get_account_balance()
-                                    available_balance = 0
-                                    for detail in balance_info['data'][0]['details']:
-                                        if detail['ccy'] == 'USDT':
-                                            available_balance = float(detail['availBal'])
-                                            break
-                                    entry_usdt_percent = float(self.config["STRATEGY_CONFIG"]['entry_usdt_percent'])
-                                    # 计算入场金额（使用账户余额的一半）
-                                    entry_usdt = available_balance * entry_usdt_percent
-                                    
-                                    # 计算入场价格（当前标记价格上浮0.1%）
-                                    price_precise = instance.get_decimal_places(tick_size=tick_size)
-                                    entry_price = round(mark_price * 1.001, price_precise)
+                        # 获取资金费率
+                        funding_rate_info = publicDataAPI.get_funding_rate(instId=symbol)
+                        funding_rate = float(funding_rate_info['data'][0]['fundingRate'])
+                        
+                        # 获取标记价格
+                        mark_price_info = publicDataAPI.get_mark_price(instId=symbol, instType="SWAP")
+                        mark_price = float(mark_price_info['data'][0]['markPx'])
+                        
+                        funding_rate_limit = float(self.config["STRATEGY_CONFIG"]['funding_rate_limit']) / 100
+                        # 判断是否满足做空条件
+                        is_bearish = (prev_close < prev_open and 
+                                    prev_prev_close < prev_prev_open and 
+                                    funding_rate > funding_rate_limit)  # 资金费率大于1%
+                        if is_bearish:
+                            try:
+                                # 获取账户余额
+                                balance_info = accountAPI.get_account_balance()
+                                available_balance = 0
+                                for detail in balance_info['data'][0]['details']:
+                                    if detail['ccy'] == 'USDT':
+                                        available_balance = float(detail['availBal'])
+                                        break
+                                entry_usdt_percent = float(self.config["STRATEGY_CONFIG"]['entry_usdt_percent'])
+                                # 计算入场金额（使用账户余额的一半）
+                                entry_usdt = available_balance * entry_usdt_percent
+                                
+                                # 计算入场价格（当前标记价格上浮0.1%）
+                                price_precise = instance.get_decimal_places(tick_size=tick_size)
+                                entry_price = round(mark_price * 1.001, price_precise)
 
-                                    # 使用instance的amount函数计算下单数量
-                                    quantity = instance.amountConvertToSZ(symbol, entry_usdt / entry_price, entry_price, "MARKET")
+                                # 使用instance的amount函数计算下单数量
+                                quantity = instance.amountConvertToSZ(symbol, entry_usdt / entry_price, entry_price, "MARKET")
+                                
+                                # 计算下单数量
+                                
+                                self.logger.info(f"{symbol}做空入场: 账户余额:{available_balance}|"
+                                                f"入场金额:{entry_usdt}|入场价格:{entry_price}|"
+                                                f"数量:{quantity}")
+                                
+                                # 开空单
+                                order_params = {
+                                    "instId": symbol,
+                                    "tdMode": "cross",
+                                    "side": "sell",
+                                    "ordType": "limit",
+                                    "sz": str(quantity),
+                                    "px": str(entry_price)
+                                }
+                                
+                                order_result = tradeAPI.place_order(**order_params)
+                                
+                                if order_result['code'] == '0':
+                                    order_id = order_result['data'][0]['ordId']
+                                    self.logger.info(f"开空单成功，订单ID: {order_id}")
                                     
-                                    # 计算下单数量
+                                    # 发送通知
+                                    msg = f"{symbol} 开空成功:\n" \
+                                            f"价格: {mark_price}\n" \
+                                            f"数量: {quantity}\n" \
+                                            f"订单ID: {order_id}"
+                                    self.send_wx_notification(f"okx-{symbol}", msg)
                                     
-                                    self.logger.info(f"{symbol}做空入场: 账户余额:{available_balance}|"
-                                                   f"入场金额:{entry_usdt}|入场价格:{entry_price}|"
-                                                   f"数量:{quantity}")
+                                    # 开仓成功后退出循环
+                                    self.logger.info(f"{symbol} 开仓成功，退出监控循环")
+                                    return True
                                     
-                                    # 开空单
-                                    order_params = {
-                                        "instId": symbol,
-                                        "tdMode": "cross",
-                                        "side": "sell",
-                                        "ordType": "limit",
-                                        "sz": str(quantity),
-                                        "px": str(entry_price)
-                                    }
+                                else:
+                                    self.logger.error(f"开空单失败: {order_result}")
+                                    self.send_wx_notification("新币监控", 
+                                                            f"{symbol} 开空单失败: {order_result}")
                                     
-                                    order_result = tradeAPI.place_order(**order_params)
-                                    
-                                    if order_result['code'] == '0':
-                                        order_id = order_result['data'][0]['ordId']
-                                        self.logger.info(f"开空单成功，订单ID: {order_id}")
-                                        
-                                        # 发送通知
-                                        msg = f"{symbol} 开空成功:\n" \
-                                              f"价格: {mark_price}\n" \
-                                              f"数量: {quantity}\n" \
-                                              f"订单ID: {order_id}"
-                                        self.send_wx_notification(f"okx-{symbol}", msg)
-                                        
-                                        # 开仓成功后退出循环
-                                        self.logger.info(f"{symbol} 开仓成功，退出监控循环")
-                                        return True
-                                        
-                                    else:
-                                        self.logger.error(f"开空单失败: {order_result}")
-                                        self.send_wx_notification("新币监控", 
-                                                               f"{symbol} 开空单失败: {order_result}")
-                                        
-                                except Exception as e:
-                                    error_msg = f"开空单异常: {str(e)}"
-                                    self.logger.error(error_msg)
-                                    self.send_wx_notification("新币监控", error_msg)
+                            except Exception as e:
+                                error_msg = f"开空单异常: {str(e)}"
+                                self.logger.error(error_msg)
+                                self.send_wx_notification("新币监控", error_msg)
                 
             except Exception as e:
                 self.logger.error(f"监控新币异常: {str(e)}")
