@@ -16,17 +16,25 @@ from enum import Enum
 from binance.um_futures import UMFutures as Client
 from binance.error import ClientError
 from lib_okx.log_helper import get_logger
+from lib_bitmart.log_helper import bitmart_get_logger
 from lib_okx.okx_account_helper import OkxAccountHelper
 from lib_gateio.gate_bot import GateBot
+from lib_bitmart.bitmart_account_helper import BitmartAccountHelper
 
 # 获取当前文件所在的目录
 root_path = os.path.dirname(os.path.abspath(__file__))
 # 日志处理
 logger = get_logger(log_path_dir=root_path)
 # 加载OKX辅助工具类
+
+bitmart_logger = bitmart_get_logger(log_path_dir=root_path)
+
 okx_helper = OkxAccountHelper(root_path=root_path, logger=logger)
 
 gate_bot = GateBot()
+
+bitmart_bot = BitmartAccountHelper(root_path=root_path, logger=bitmart_logger)
+
 processed_map = {}
 
 from config import BINANCE_CONFIG, WX_CONFIG, STRATEGY_CONFIG
@@ -350,13 +358,8 @@ def receive_message():
             exchange = data.get('exchange')
 
             send_notification(f"新币上线-{exchange}-{currency}")
-
-            # 目前mexc不支持API交易，所以有新的品种上线满足条件了，就告警一下手动开仓
-            # if currency in processed_map and exchange.upper() != "MEXC":
-            #     logger.info(f"已经处理过该币种: {currency}, 跳过")
-            #     return '', 200
-            # processed_map[currency] = True
             
+            # 有带单数据，需要做一下数据
             if exchange.upper() == 'BINANCE':
                 # 格式化币对名称（添加USDT后缀）
                 symbol = f"{currency}USDT"
@@ -379,6 +382,12 @@ def receive_message():
                     )
                     monitor_thread.start()
 
+            # # 目前mexc不支持API交易，所以有新的品种上线满足条件了，就告警一下手动开仓
+            # if currency in processed_map and exchange.upper() != "MEXC":
+            #     logger.info(f"已经处理过该币种: {currency}, 跳过")
+            #     return '', 200
+            # processed_map[currency] = True
+
             if exchange.upper() == 'GATE.IO':
                 symbol = f"{currency}_USDT"
                 monitor_thread = threading.Thread(
@@ -387,6 +396,16 @@ def receive_message():
                     daemon=True
                 )
                 monitor_thread.start()
+
+            if exchange.upper() == 'BITMART':
+                symbol = f"{currency}USDT"
+                for account in bitmart_bot.accounts:
+                    monitor_thread = threading.Thread(
+                        target=bitmart_bot.monitor_new_coin,
+                        args=(symbol, account["instance"]),
+                        daemon=True
+                    )
+                    monitor_thread.start()
 
             return '', 200
             

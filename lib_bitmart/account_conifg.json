@@ -1,0 +1,25 @@
+{
+  "global": {
+    "symbol_info_file": "symbol_info.json",
+    "wx_token": "SCT264877TGGj20niEYBVMMFU1aN6NQF6g",
+    "listen_port": 80,
+    "listen_host": "0.0.0.0",
+    "debug_mode": true,
+    "ip_white_list": "52.89.214.238,34.212.75.30,54.218.53.128,52.32.178.7,127.0.0.1"
+  },
+  "account_list": [
+    {
+      "api_key": "",
+      "secret_key": "",
+      "memo": ""
+    }
+  ],
+    "STRATEGY_CONFIG":{
+      "funding_rate_limit": -0.3,
+      "entry_limit_percent": 4,
+      "entry_price_add_percent": 0,
+      "entry_usdt_percent": 0.01,
+      "sl_percent": 99,
+      "tp_percent": 10
+  }
+}
