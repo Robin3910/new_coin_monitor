@@ -344,6 +344,49 @@ def send_notification(content):
     except Exception as e:
         logger.error(f"发送通知失败: {str(e)}")
 
+def send_dingtalk_notification(content, title=None):
+    """发送通知到钉钉群"""
+    try:
+        webhook_url = 'https://oapi.dingtalk.com/robot/send?access_token=371fa21c1ac912db4bcc615e995be845a5e8c51fc844eac82440797574e20de0'
+        
+        # 准备消息内容
+        if title is None:
+            title = "新币监控通知"
+        
+        message = {
+            "msgtype": "text",
+            "text": {
+                "content": f"{title}\n{content}"
+            }
+        }
+        
+        # 发送请求
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(webhook_url, json=message, headers=headers)
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('errcode') == 0:
+                logger.info("钉钉通知发送成功")
+            else:
+                logger.error(f"钉钉通知发送失败: {result}")
+        else:
+            logger.error(f"钉钉通知请求失败: {response.status_code}")
+            
+    except Exception as e:
+        logger.error(f"发送钉钉通知失败: {str(e)}")
+
+
+
+def send_all_notifications(content, title=None):
+    """发送通知到所有配置的渠道"""
+    # 发送微信通知
+    send_notification(content)
+    # 发送钉钉通知
+    send_dingtalk_notification(content, title)
+
+        
+
 @app.route('/', methods=['GET', 'POST'])
 def receive_message():
     if request.method == 'POST':
@@ -382,12 +425,6 @@ def receive_message():
                     )
                     monitor_thread.start()
 
-            # # 目前mexc不支持API交易，所以有新的品种上线满足条件了，就告警一下手动开仓
-            # if currency in processed_map and exchange.upper() != "MEXC":
-            #     logger.info(f"已经处理过该币种: {currency}, 跳过")
-            #     return '', 200
-            # processed_map[currency] = True
-
             if exchange.upper() == 'GATE.IO':
                 symbol = f"{currency}_USDT"
                 monitor_thread = threading.Thread(
@@ -397,15 +434,23 @@ def receive_message():
                 )
                 monitor_thread.start()
 
-            if exchange.upper() == 'BITMART':
-                symbol = f"{currency}USDT"
-                for account in bitmart_bot.accounts:
-                    monitor_thread = threading.Thread(
-                        target=bitmart_bot.monitor_new_coin,
-                        args=(symbol, account["instance"]),
-                        daemon=True
-                    )
-                    monitor_thread.start()
+            # # 目前mexc不支持API交易，所以有新的品种上线满足条件了，就告警一下手动开仓
+            # if currency in processed_map and exchange.upper() != "MEXC":
+            #     logger.info(f"已经处理过该币种: {currency}, 跳过")
+            #     return '', 200
+            # processed_map[currency] = True
+
+            # if exchange.upper() == 'BITMART':
+            #     symbol = f"{currency}USDT"
+            #     for account in bitmart_bot.accounts:
+            #         monitor_thread = threading.Thread(
+            #             target=bitmart_bot.monitor_new_coin,
+            #             args=(symbol, account["instance"]),
+            #             daemon=True
+            #         )
+            #         monitor_thread.start()
+            
+            send_dingtalk_notification(f"{exchange}-{currency}", "新币上线")
 
             return '', 200
             
