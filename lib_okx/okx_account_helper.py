@@ -569,12 +569,12 @@ class OkxAccountHelper:
                         
                         funding_rate_limit = float(self.config["STRATEGY_CONFIG"]['funding_rate_limit']) / 100
                         # 判断是否满足做空条件
-                        self.logger.info(f"okx-{symbol} | 倒数第二根K线开盘价: {prev_open}, 收盘价: {prev_close} | 倒数第三根K线开盘价: {prev_prev_open}, 收盘价: {prev_prev_close} | 当前资金费率: {funding_rate}, 资金费率阈值: {funding_rate_limit}")
                         is_bearish = (prev_close < prev_open and 
                                     prev_prev_close < prev_prev_open and 
                                     funding_rate > funding_rate_limit)  # 资金费率大于1%
                         if is_bearish:
                             try:
+                                self.logger.info(f"okx-{symbol} | 倒数第二根K线开盘价: {prev_open}, 收盘价: {prev_close} | 倒数第三根K线开盘价: {prev_prev_open}, 收盘价: {prev_prev_close} | 当前资金费率: {funding_rate}, 资金费率阈值: {funding_rate_limit}")
                                 # 获取账户余额
                                 balance_info = accountAPI.get_account_balance()
                                 available_balance = 0
