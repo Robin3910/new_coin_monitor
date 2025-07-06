@@ -400,7 +400,6 @@ def receive_message():
             currency = data.get('currency')
             exchange = data.get('exchange')
 
-            send_notification(f"新币上线-{exchange}-{currency}")
             
             # 有带单数据，需要做一下数据
             if exchange.upper() == 'BINANCE':
@@ -434,6 +433,11 @@ def receive_message():
                 )
                 monitor_thread.start()
 
+            # 只有指定的交易所才发送钉钉告警
+            if exchange.upper() in ['BINANCE', 'GATE.IO', 'BITGET', 'OKX', 'MEXC']:
+                send_dingtalk_notification(f"{exchange}-{currency}", "新币上线")
+                send_notification(f"新币上线-{exchange}-{currency}")
+
             # # 目前mexc不支持API交易，所以有新的品种上线满足条件了，就告警一下手动开仓
             # if currency in processed_map and exchange.upper() != "MEXC":
             #     logger.info(f"已经处理过该币种: {currency}, 跳过")
@@ -450,7 +454,7 @@ def receive_message():
             #         )
             #         monitor_thread.start()
             
-            send_dingtalk_notification(f"{exchange}-{currency}", "新币上线")
+            # send_dingtalk_notification(f"{exchange}-{currency}", "新币上线")
 
             return '', 200
             
