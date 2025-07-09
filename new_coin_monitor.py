@@ -434,7 +434,7 @@ def receive_message():
                 monitor_thread.start()
 
             # 只有指定的交易所才发送钉钉告警
-            if exchange.upper() in ['BINANCE', 'GATE.IO', 'BITGET', 'OKX', 'MEXC']:
+            if exchange.upper() in ['BINANCE', 'GATE.IO', 'BITGET', 'OKX']:
                 send_dingtalk_notification(f"{exchange}-{currency}", "新币上线。注意：这不是入场信号，先观望一下！")
                 send_notification(f"新币上线-{exchange}-{currency}")
 
