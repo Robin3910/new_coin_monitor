@@ -436,7 +436,7 @@ def receive_message():
             # 只有指定的交易所才发送钉钉告警
             if exchange.upper() in ['BINANCE', 'GATE.IO', 'BITGET', 'OKX']:
                 send_dingtalk_notification(f"{exchange}-{currency}", "新币上线。注意：这不是入场信号，先观望一下！")
-                send_notification(f"新币上线-{exchange}-{currency}")
+                # send_notification(f"新币上线-{exchange}-{currency}")
 
             # # 目前mexc不支持API交易，所以有新的品种上线满足条件了，就告警一下手动开仓
             # if currency in processed_map and exchange.upper() != "MEXC":

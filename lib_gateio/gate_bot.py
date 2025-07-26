@@ -423,6 +423,13 @@ class GateBot:
                         if is_bearish:
                             try:
                                 self.logger.info(f"{symbol} | 倒数第二根K线开盘价: {prev_open}, 收盘价: {prev_close} | 倒数第三根K线开盘价: {prev_prev_open}, 收盘价: {prev_prev_close} | 当前资金费率: {funding_rate}, 资金费率阈值: {funding_rate_limit}")
+                                # 发送满足条件的警报
+                                alert_msg = f"gateio-{symbol} 满足做空条件:\n" \
+                                          f"倒数第二根K线跌幅: {((prev_close-prev_open)/prev_open*100):.2f}%\n" \
+                                          f"倒数第三根K线跌幅: {((prev_prev_close-prev_prev_open)/prev_prev_open*100):.2f}%\n" \
+                                          f"当前资金费率: {funding_rate*100:.2f}%\n" \
+                                          f"当前标记价格: {mark_price}"
+                                self.send_wx_notification(f"gateio-{symbol}空", alert_msg)
                                 # 获取账户余额
                                 account_info = self.get_account()
                                 available_balance = float(account_info.available) if account_info else 0
@@ -477,6 +484,7 @@ class GateBot:
                 
             except Exception as e:
                 self.logger.error(f"监控新币异常: {str(e)}")
+                return True
             
             time.sleep(60)  # 每分钟检查一次
 
