@@ -399,7 +399,8 @@ def receive_message():
             
             currency = data.get('currency')
             exchange = data.get('exchange')
-
+            # 获取免提醒标志位
+            no_notify = data.get('no_notify', False)
             
             # 有带单数据，需要做一下数据
             if exchange.upper() == 'BINANCE':
@@ -433,8 +434,8 @@ def receive_message():
                 )
                 monitor_thread.start()
 
-            # 只有指定的交易所才发送钉钉告警
-            if exchange.upper() in ['BINANCE', 'GATE.IO', 'BITGET', 'OKX']:
+            # 只有指定的交易所且没有免提醒标志位时才发送钉钉告警
+            if exchange.upper() in ['BINANCE', 'GATE.IO', 'BITGET', 'OKX'] and not no_notify:
                 send_dingtalk_notification(f"{exchange}-{currency}", "新币上线。注意：这不是入场信号，先观望一下！")
                 # send_notification(f"新币上线-{exchange}-{currency}")
 
