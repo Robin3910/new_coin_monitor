@@ -338,8 +338,9 @@ def send_notification(content):
     """发送通知到微信"""
     try:
         # 发送到方糖
-        ftqq_url = f"https://sctapi.ftqq.com/{WX_CONFIG['token']}.send?title={content}&desp={content}"
-        requests.get(ftqq_url)
+        for token in WX_CONFIG['token_list']:
+            ftqq_url = f"https://sctapi.ftqq.com/{token}.send?title={content}&desp={content}"
+            requests.get(ftqq_url)
         
     except Exception as e:
         logger.error(f"发送通知失败: {str(e)}")

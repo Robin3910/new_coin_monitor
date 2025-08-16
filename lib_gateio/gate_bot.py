@@ -11,6 +11,7 @@ from gate_api import ApiClient, Configuration, FuturesApi, FuturesOrder, Futures
 from gate_api.exceptions import GateApiException
 import time
 import json
+from config import WX_CONFIG
 
 # app = Flask(__name__)
 
@@ -105,7 +106,9 @@ class GateBot:
                 'title': title,
                 'desp': message
             }
-            requests.post(f'https://sctapi.ftqq.com/{WX_TOKEN}.send', data=mydata)
+            # 遍历所有配置的token发送通知
+            for token in WX_CONFIG['token_list']:
+                requests.post(f'https://sctapi.ftqq.com/{token}.send', data=mydata)
             self.logger.info('发送微信消息成功')
         except Exception as e:
             self.logger.error(f'发送微信消息失败: {str(e)}')

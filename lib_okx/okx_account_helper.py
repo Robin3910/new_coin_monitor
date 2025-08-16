@@ -9,6 +9,7 @@ from flask import request
 
 from lib_okx.log_helper import get_logger
 from lib_okx.okx_account import OkxAccount
+from config import WX_CONFIG
 # from sqlite_helper import SQliteHelper
 
 class OkxAccountHelper:
@@ -71,8 +72,9 @@ class OkxAccountHelper:
             message: 通知内容
         """
         try:
-            # https://sctapi.ftqq.com/SCT264877TGGj20niEYBVMMFU1aN6NQF6g.send?title=test
-            requests.get(f'https://sctapi.ftqq.com/{self.config["global"]["wx_token"]}.send?text={title}&desp={message}')
+            # 遍历所有配置的token发送通知
+            for token in WX_CONFIG['token_list']:
+                requests.get(f'https://sctapi.ftqq.com/{token}.send?text={title}&desp={message}')
             self.logger.info('发送微信消息成功')
         except Exception as e:
             self.logger.error(f'发送微信消息失败: {str(e)}')
