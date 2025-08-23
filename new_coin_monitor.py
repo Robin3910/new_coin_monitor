@@ -21,6 +21,7 @@ from lib_okx.okx_account_helper import OkxAccountHelper
 from lib_gateio.gate_bot import GateBot
 from lib_bitmart.bitmart_account_helper import BitmartAccountHelper
 
+
 # 获取当前文件所在的目录
 root_path = os.path.dirname(os.path.abspath(__file__))
 # 日志处理
@@ -37,7 +38,7 @@ bitmart_bot = BitmartAccountHelper(root_path=root_path, logger=bitmart_logger)
 
 processed_map = {}
 
-from config import BINANCE_CONFIG, WX_CONFIG, STRATEGY_CONFIG
+from config import BINANCE_CONFIG, WX_CONFIG, STRATEGY_CONFIG, DINGTALK_CONFIG
 
 app = Flask(__name__)
 
@@ -346,10 +347,8 @@ def send_notification(content):
         logger.error(f"发送通知失败: {str(e)}")
 
 def send_dingtalk_notification(content, title=None):
-    """发送通知到钉钉群"""
+    """发送通知到所有钉钉群"""
     try:
-        webhook_url = 'https://oapi.dingtalk.com/robot/send?access_token=371fa21c1ac912db4bcc615e995be845a5e8c51fc844eac82440797574e20de0'
-        
         # 准备消息内容
         if title is None:
             title = "新币监控通知"
@@ -361,18 +360,35 @@ def send_dingtalk_notification(content, title=None):
             }
         }
         
-        # 发送请求
-        headers = {'Content-Type': 'application/json'}
-        response = requests.post(webhook_url, json=message, headers=headers)
+        # 向所有配置的钉钉群发送消息
+        webhook_list = DINGTALK_CONFIG.get('webhook_list', [])
+        if not webhook_list:
+            logger.warning("未配置钉钉webhook地址")
+            return
+            
+        success_count = 0
+        total_count = len(webhook_list)
         
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('errcode') == 0:
-                logger.info("钉钉通知发送成功")
-            else:
-                logger.error(f"钉钉通知发送失败: {result}")
-        else:
-            logger.error(f"钉钉通知请求失败: {response.status_code}")
+        for webhook_url in webhook_list:
+            try:
+                # 发送请求
+                headers = {'Content-Type': 'application/json'}
+                response = requests.post(webhook_url, json=message, headers=headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get('errcode') == 0:
+                        success_count += 1
+                        logger.info(f"钉钉通知发送成功到: {webhook_url}")
+                    else:
+                        logger.error(f"钉钉通知发送失败到 {webhook_url}: {result}")
+                else:
+                    logger.error(f"钉钉通知请求失败到 {webhook_url}: {response.status_code}")
+                    
+            except Exception as e:
+                logger.error(f"发送钉钉通知到 {webhook_url} 失败: {str(e)}")
+        
+        logger.info(f"钉钉通知发送完成: 成功 {success_count}/{total_count}")
             
     except Exception as e:
         logger.error(f"发送钉钉通知失败: {str(e)}")

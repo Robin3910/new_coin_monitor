@@ -12,6 +12,14 @@ WX_CONFIG = {
     'token_list': ['SCT264877TGGj20niEYBVMMFU1aN6NQF6g','SCT268240TBcMk5tPRtDwwFOdOkspgYmGl']
 }
 
+# 钉钉告警配置
+DINGTALK_CONFIG = {
+    'webhook_list': [
+        'https://oapi.dingtalk.com/robot/send?access_token=371fa21c1ac912db4bcc615e995be845a5e8c51fc844eac82440797574e20de0',
+        'https://oapi.dingtalk.com/robot/send?access_token=0f29eff00b9cc3bf6163fb11cba20f3543303f1cc181f37beb9e2485675878ce'
+    ]
+}
+
 STRATEGY_CONFIG = {
     'funding_rate_limit': -0.3, # 单位%，例如资金费率要大于-0.3%，才能开仓
     'entry_limit_percent': 4, # 单位%，例如4小时K棒要下跌超过5%，才能开仓
