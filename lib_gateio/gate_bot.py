@@ -452,13 +452,14 @@ class GateBot:
                                                f"数量:{quantity}")
                                 
                                 # 开空单
-                                order_id = self.place_order(
-                                    symbol=symbol,
-                                    side="sell",
-                                    qty=quantity,
-                                    price=entry_price,
-                                    order_type="limit"
-                                )
+                                order_id = ""
+                                # order_id = self.place_order(
+                                #     symbol=symbol,
+                                #     side="sell",
+                                #     qty=quantity,
+                                #     price=entry_price,
+                                #     order_type="limit"
+                                # )
                                 
                                 if order_id:
                                     self.logger.info(f"开空单成功，订单ID: {order_id}")

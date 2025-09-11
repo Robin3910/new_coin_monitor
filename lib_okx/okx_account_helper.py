@@ -617,8 +617,10 @@ class OkxAccountHelper:
                                     "sz": str(quantity),
                                     "px": str(entry_price)
                                 }
+
+                                order_result = {'code': '200'}
                                 
-                                order_result = tradeAPI.place_order(**order_params)
+                                # order_result = tradeAPI.place_order(**order_params)
                                 
                                 if order_result['code'] == '0':
                                     order_id = order_result['data'][0]['ordId']
