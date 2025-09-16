@@ -229,7 +229,7 @@ def monitor_new_coin(symbol):
                             break
                         else:
                             logger.error(f"开空单失败: {order}")
-                            send_notification(f"{symbol} 开空单失败: {order}")
+                            # send_notification(f"{symbol} 开空单失败: {order}")
                             
                     except Exception as e:
                         error_msg = f"开空单异常: {str(e)}"
