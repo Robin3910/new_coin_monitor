@@ -477,8 +477,8 @@ class GateBot:
                                     
                                 else:
                                     self.logger.error(f"开空单失败")
-                                    self.send_wx_notification("新币监控", 
-                                                           f"{symbol} 开空单失败")
+                                    # self.send_wx_notification("新币监控", 
+                                    #                        f"{symbol} 开空单失败")
                                     
                             except GateApiException as e:
                                 error_msg = f"开空单异常: {str(e)}"
