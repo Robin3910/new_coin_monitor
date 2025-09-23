@@ -207,15 +207,15 @@ def monitor_new_coin(symbol):
                                   f"入场价格:{entry_price}|quantity:{quantity}")
 
                         # 开空单
-                        # order = client.new_order(
-                        #     symbol=symbol,
-                        #     side="SELL",
-                        #     type="LIMIT",
-                        #     quantity=quantity,
-                        #     price=entry_price,
-                        #     timeInForce="GTC"
-                        # )
-                        order = {}
+                        order = client.new_order(
+                            symbol=symbol,
+                            side="SELL",
+                            type="LIMIT",
+                            quantity=quantity,
+                            price=entry_price,
+                            timeInForce="GTC"
+                        )
+                        # order = {}
                         
                         if order['orderId']:
                             update_trading_status(symbol, TradingStatus.ORDER_PLACED, order['orderId'])
