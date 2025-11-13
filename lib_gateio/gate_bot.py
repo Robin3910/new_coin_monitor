@@ -432,7 +432,7 @@ class GateBot:
                                           f"倒数第三根K线跌幅: {((prev_prev_close-prev_prev_open)/prev_prev_open*100):.2f}%\n" \
                                           f"当前资金费率: {funding_rate*100:.2f}%\n" \
                                           f"当前标记价格: {mark_price}"
-                                self.send_wx_notification(f"gateio-{symbol}空", alert_msg)
+                                # self.send_wx_notification(f"gateio-{symbol}空", alert_msg)
                                 # 获取账户余额
                                 account_info = self.get_account()
                                 available_balance = float(account_info.available) if account_info else 0
