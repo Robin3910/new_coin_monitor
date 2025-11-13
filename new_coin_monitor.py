@@ -188,7 +188,7 @@ def monitor_new_coin(symbol):
 
                 trading_info = get_trading_info(symbol)
                 # 当前K线跌幅超过配置的百分比才算下跌
-                is_bearish = prev_close < prev_open and prev_prev_close < prev_prev_open and funding_rate > STRATEGY_CONFIG['funding_rate_limit']/100 and trading_info.get('status') == TradingStatus.NOT_QUALIFIED.value
+                is_bearish = prev_close < prev_open and funding_rate > STRATEGY_CONFIG['funding_rate_limit']/100 and trading_info.get('status') == TradingStatus.NOT_QUALIFIED.value
                 
                 if is_bearish:
                     try:
@@ -215,7 +215,7 @@ def monitor_new_coin(symbol):
                         #     price=entry_price,
                         #     timeInForce="GTC"
                         # )
-                        order = {}
+                        order = {order_id : 1}
                         
                         if order['orderId']:
                             update_trading_status(symbol, TradingStatus.ORDER_PLACED, order['orderId'])
