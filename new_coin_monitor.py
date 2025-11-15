@@ -207,15 +207,15 @@ def monitor_new_coin(symbol):
                                   f"入场价格:{entry_price}|quantity:{quantity}")
 
                         # 开空单
-                        # order = client.new_order(
-                        #     symbol=symbol,
-                        #     side="SELL",
-                        #     type="LIMIT",
-                        #     quantity=quantity,
-                        #     price=entry_price,
-                        #     timeInForce="GTC"
-                        # )
-                        order = {"orderId" : 1}
+                        order = client.new_order(
+                            symbol=symbol,
+                            side="SELL",
+                            type="LIMIT",
+                            quantity=quantity,
+                            price=entry_price,
+                            timeInForce="GTC"
+                        )
+                        # order = {"orderId" : 1}
                         
                         if order['orderId']:
                             update_trading_status(symbol, TradingStatus.ORDER_PLACED, order['orderId'])
@@ -244,99 +244,99 @@ def monitor_new_coin(symbol):
             continue
 
     # 监控持仓
-    # while True:
-    #     try:
-    #         # 读取交易状态
-    #         pair_info = get_trading_info(symbol)
-    #         current_status = pair_info.get('status')
-    #         order_id = pair_info.get('order_id')
+    while True:
+        try:
+            # 读取交易状态
+            pair_info = get_trading_info(symbol)
+            current_status = pair_info.get('status')
+            order_id = pair_info.get('order_id')
             
-    #         if current_status == TradingStatus.ORDER_PLACED.value and order_id:
-    #             # 检查订单是否成交
-    #             order = client.query_order(symbol=symbol, orderId=order_id)
+            if current_status == TradingStatus.ORDER_PLACED.value and order_id:
+                # 检查订单是否成交
+                order = client.query_order(symbol=symbol, orderId=order_id)
 
                 
-    #             if order['status'] == 'FILLED':
-    #                 entry_price = float(order['avgPrice'])
-    #                 quantity = float(order['executedQty'])
+                if order['status'] == 'FILLED':
+                    entry_price = float(order['avgPrice'])
+                    quantity = float(order['executedQty'])
                     
-    #                 # 计算止盈止损价格
-    #                 tp_price = round(entry_price * (1 - STRATEGY_CONFIG['tp_percent'] / 100), 
-    #                                symbol_tick_size[symbol]['tick_size'])
-    #                 sl_price = round(entry_price * (1 + STRATEGY_CONFIG['sl_percent'] / 100), 
-    #                                symbol_tick_size[symbol]['tick_size'])
+                    # 计算止盈止损价格
+                    tp_price = round(entry_price * (1 - STRATEGY_CONFIG['tp_percent'] / 100), 
+                                   symbol_tick_size[symbol]['tick_size'])
+                    sl_price = round(entry_price * (1 + STRATEGY_CONFIG['sl_percent'] / 100), 
+                                   symbol_tick_size[symbol]['tick_size'])
                     
-    #                 logger.info(f"设置止盈: {tp_price}|止损： {sl_price}|入场价格：{entry_price}|数量：{quantity}")
+                    logger.info(f"设置止盈: {tp_price}|止损： {sl_price}|入场价格：{entry_price}|数量：{quantity}")
                     
-    #                 # 设置止盈单
-    #                 tp_order = client.new_order(
-    #                     symbol=symbol,
-    #                     side="BUY",
-    #                     type="LIMIT",
-    #                     quantity=quantity,
-    #                     price=tp_price,
-    #                     reduceOnly=True,
-    #                     timeInForce="GTC"
-    #                 )
+                    # 设置止盈单
+                    tp_order = client.new_order(
+                        symbol=symbol,
+                        side="BUY",
+                        type="LIMIT",
+                        quantity=quantity,
+                        price=tp_price,
+                        reduceOnly=True,
+                        timeInForce="GTC"
+                    )
                     
-    #                 # 设置止损单
-    #                 sl_order = client.new_order(
-    #                     symbol=symbol,
-    #                     side="BUY",
-    #                     type="STOP_MARKET",
-    #                     stopPrice=sl_price,
-    #                     quantity=quantity,
-    #                     reduceOnly=True,
-    #                     timeInForce="GTC"
-    #                 )
+                    # 设置止损单
+                    sl_order = client.new_order(
+                        symbol=symbol,
+                        side="BUY",
+                        type="STOP_MARKET",
+                        stopPrice=sl_price,
+                        quantity=quantity,
+                        reduceOnly=True,
+                        timeInForce="GTC"
+                    )
 
-    #                 if tp_order['orderId'] and sl_order['orderId']:
-    #                     # 更新状态为已持仓
-    #                     update_trading_status(
-    #                         symbol, 
-    #                         TradingStatus.POSITION_OPENED,
-    #                         order_id,
-    #                         tp_order['orderId'],
-    #                         sl_order['orderId']
-    #                     )
+                    if tp_order['orderId'] and sl_order['orderId']:
+                        # 更新状态为已持仓
+                        update_trading_status(
+                            symbol, 
+                            TradingStatus.POSITION_OPENED,
+                            order_id,
+                            tp_order['orderId'],
+                            sl_order['orderId']
+                        )
                         
-    #                     msg = f"{symbol} 入场成功并设置止盈止损:\n" \
-    #                         f"入场价格: {entry_price}\n" \
-    #                         f"止盈价格: {tp_price}\n" \
-    #                         f"止损价格: {sl_price}\n" \
-    #                         f"数量: {quantity}"
-    #                     send_notification(msg)
-    #                     logger.info(msg)
+                        msg = f"{symbol} 入场成功并设置止盈止损:\n" \
+                            f"入场价格: {entry_price}\n" \
+                            f"止盈价格: {tp_price}\n" \
+                            f"止损价格: {sl_price}\n" \
+                            f"数量: {quantity}"
+                        send_notification(msg)
+                        logger.info(msg)
                 
-    #         elif current_status == TradingStatus.POSITION_OPENED.value:
-    #             # 检查止盈止损单是否成交
-    #             tp_order_id = pair_info.get('tp_order_id')
-    #             sl_order_id = pair_info.get('sl_order_id')
+            elif current_status == TradingStatus.POSITION_OPENED.value:
+                # 检查止盈止损单是否成交
+                tp_order_id = pair_info.get('tp_order_id')
+                sl_order_id = pair_info.get('sl_order_id')
                 
-    #             if tp_order_id:
-    #                 tp_order = client.query_order(symbol=symbol, orderId=tp_order_id)
-    #                 if tp_order['status'] == 'FILLED':
-    #                     update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
-    #                     msg = f"{symbol} 止盈成交，交易结束"
-    #                     send_notification(msg)
-    #                     logger.info(msg)
-    #                     break
+                if tp_order_id:
+                    tp_order = client.query_order(symbol=symbol, orderId=tp_order_id)
+                    if tp_order['status'] == 'FILLED':
+                        update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
+                        msg = f"{symbol} 止盈成交，交易结束"
+                        send_notification(msg)
+                        logger.info(msg)
+                        break
                 
-    #             if sl_order_id:
-    #                 sl_order = client.query_order(symbol=symbol, orderId=sl_order_id)
-    #                 if sl_order['status'] == 'FILLED':
-    #                     update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
-    #                     msg = f"{symbol} 止损成交，交易结束"
-    #                     send_notification(msg)
-    #                     logger.info(msg)
-    #                     break
+                if sl_order_id:
+                    sl_order = client.query_order(symbol=symbol, orderId=sl_order_id)
+                    if sl_order['status'] == 'FILLED':
+                        update_trading_status(symbol, TradingStatus.POSITION_CLOSED)
+                        msg = f"{symbol} 止损成交，交易结束"
+                        send_notification(msg)
+                        logger.info(msg)
+                        break
             
-    #         time.sleep(10)  # 每10秒检查一次
+            time.sleep(10)  # 每10秒检查一次
         
-    #     except Exception as e:
-    #         logger.error(f"监控持仓出错: {str(e)}")
-    #         time.sleep(10)
-    #         continue
+        except Exception as e:
+            logger.error(f"监控持仓出错: {str(e)}")
+            time.sleep(10)
+            continue
 
 def send_notification(content):
     """发送通知到微信"""
